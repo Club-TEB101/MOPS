@@ -100,3 +100,5 @@ df_table = htlm_parser.parse_html_table(html_tables[0])
 df_table.to_csv('107_{}.csv'.format(payload['TYPEK']), index=False, encoding='utf-8')
 
 print(df_table)
+
+#https://blog.techbridge.cc/2019/07/26/how-to-use-taiwan-salary-data-to-do-python-data-analytics-and-data-visualization/
