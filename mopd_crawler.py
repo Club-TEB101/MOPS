@@ -25,15 +25,14 @@ Financial_Statements = {
     "Profit_and_Loss_Account": "ajax_t163sb04"  # 綜合損益表
 
 }
-
-
 # 現金流量表再另一個網址?
 # "Cash_Flow_Statement": "ajax_t164sb05"
+
 
 def main():
     global url, headers, payload, Financial_Statements
     for sheet in Financial_Statements:
-        resp = requests.post(url.format(sheet), data=payload, headers=headers, timeout=3)
+        resp = requests.post(url.format(Financial_Statements[sheet]), data=payload, headers=headers, timeout=3)
         soup = BeautifulSoup(resp.text, 'html.parser')
         tables = soup.find_all('table')
         process_data(tables)
