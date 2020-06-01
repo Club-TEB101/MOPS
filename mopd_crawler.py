@@ -22,11 +22,9 @@ payload = {
 }
 Financial_Statements = {
     "Balance_Sheet": "ajax_t163sb03",  # 資產負債表
-    "Profit_and_Loss_Account": "ajax_t163sb04"  # 綜合損益表
-
+    "Profit_and_Loss_Account": "ajax_t163sb04",  # 綜合損益表
+    "Cash_Flow_Statement": "ajax_t164sb05"  # 現金流量表
 }
-# 現金流量表再另一個網址?
-# "Cash_Flow_Statement": "ajax_t164sb05"
 
 
 def main():
@@ -48,7 +46,7 @@ def process_data(sheet_table):
         for j in range(1, len(rows)):
             data_row = [rows[j].find_all('td')[i].text for i in range(len(columns))]
             data.append(data_row)
-            # print(data_row)
+            print(data_row)
             write_to_file(stock_code=k, rows=data, columns=columns_list)
 
 
@@ -65,3 +63,4 @@ def write_to_file(stock_code, columns, rows):
         df.to_csv(f"{file_path}{payload['season']}_{str(stock_code)}.csv",
                   index=False,
                   encoding='utf-8-sig')
+        print(f"Write in: {file_path}{payload['season']}_{str(stock_code)}.csv")
