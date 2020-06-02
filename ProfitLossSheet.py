@@ -33,7 +33,7 @@ class ProfitLossSheet(threading.Thread):
         web_ss.mount("https://", adapter=ss_adapter)
 
         # start get html
-        res = web_ss.post(url=self.url, headers=self.header, data=self.payload, timeout=5)
+        res = web_ss.post(url=self.url, headers=self.header, data=self.payload, timeout=3)
 
         # check iff: Response OK
         if res.status_code == 200:
@@ -50,17 +50,27 @@ class ProfitLossSheet(threading.Thread):
         for table in tables:
             # print(table)
             table_columns = table.select("tr[class='tblHead'] > th")
-            table_rows = table.select("tr[class='even'] > td")
+            table_rows = table.select("tr[class='even']")
+            if len(table_rows) <= 0:
+                table_rows = table.select("tr[class='odd']")
+
             column_list = [column.text for column in table_columns]
-            row_list = [row.text for row in table_rows]
-            self.write_into_file(index, column_list, row_list)
+            rows_list = [row for row in table_rows]
+            total_list = list()
+            for row in rows_list:
+                temp = list()
+                for td in row:
+                    temp.append(td.text)
+                total_list.append(temp)
+
+            self.write_into_file(index, column_list, total_list)
             index += 1
         pass
 
     def write_into_file(self, index, columns, rows):
         df = pd.DataFrame(rows, columns=columns)
         print(f"{df}")
-        # print("---END---")
+        print("---END---")
         try:
             os.makedirs(self.file_path, exist_ok=True)
         except Exception as e:

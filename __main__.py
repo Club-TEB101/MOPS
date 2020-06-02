@@ -1,7 +1,6 @@
 import datetime
 import random
 import time
-
 from MOPS import BalanceSheet, ProfitLossSheet, Constract
 
 if __name__ == '__main__':
@@ -19,11 +18,13 @@ if __name__ == '__main__':
 
                 if thread is not None:
                     threads.append(thread)
-                    time.sleep(random.randint(3, 10))
                     thread.start()
+                    time.sleep(random.randint(3, 10))
 
         for thread in threads:
             thread.join()
 
-        print(f"All {sheet} End.\nSleep 10sec...")
+        print(f"--- [{sheet}] Complete. ---\nSleep 10sec...")
         time.sleep(10)
+        threads = list()
+
