@@ -34,44 +34,72 @@ class BalanceSheet(threading.Thread):
 
         # start get html
         res = web_ss.post(url=self.url, headers=self.header, data=self.payload, timeout=3)
-
         # check iff: Response OK
         if res.status_code == 200:
             soup = bs4(res.text, "html.parser")
-            tables = soup.select("table") # [class='hasBorder']
-            print(tables)
-            # self.process_data(tables)
+            tr_list = self.pre_process(soup)
+            tables = soup.select("table[class='hasBorder']")
+            self.process_data(tables, tr_list)
         else:
             print(f"Get HTML FAIL: {res.status_code}, {res.reason}", end="\n\n")
             super().join(0)
         pass
 
-    def process_data(self, tables):
-        index = 1
-        for table in tables:
-            # print(table)
-            table_columns = table.select("tr[class='tblHead'] > th")
-            table_rows = table.select("tr[class='even']")
-            if len(table_rows) <= 0:
-                table_rows = table.select("tr[class='odd']")
+    # 因Soup處理有問題，所以改以人工獲取欄位及資料
+    def pre_process(self, soup):
+        # 取得所有欄位資料
+        all_tr_list = soup.select("tr")
 
-            column_list = [column.text for column in table_columns]
-            rows_list = [row for row in table_rows]
-            total_list = list()
-            for row in rows_list:
-                temp = list()
-                for td in row:
-                    temp.append(td.text)
-                total_list.append(temp)
+        # 設定欲傳回資料型態
+        tr_list = dict()
+        tr_list["columns"] = list()
+        tr_list["rows"] = list()
 
-            self.write_into_file(index, column_list, total_list)
-            index += 1
-        pass
+        # 設定暫存清單
+        temp_list = list()
+
+        # 判斷每個欄位的 Class，如有不同則新增至傳回資料集(tr_list)，相同則先匯入暫存清單(temp_list)
+        for i in range(len(all_tr_list)):
+            current_tr_class = all_tr_list[i].attrs["class"]
+            last_tr_class = current_tr_class \
+                if len(temp_list) <= 0 \
+                else temp_list[-1].attrs["class"]
+
+            # 去除非必要欄位
+            if current_tr_class[0] == "reportCont":
+                continue
+
+            # or 為加入最後取得之欄位清單
+            if current_tr_class != last_tr_class or i == len(all_tr_list)-1:
+                # print(f"current: {temp_list}\n --- END ---")
+                if last_tr_class[0] == "tblHead":
+                    tr_list["columns"].append(temp_list)
+                else:
+                    tr_list["rows"].append(temp_list)
+
+                temp_list = list()
+
+            temp_list.append(all_tr_list[i])
+        return tr_list
+
+    def process_data(self, tables, tr_list):
+        rows_data = list()
+        for i in range(len(tables)):
+            columns = tr_list["columns"][i][0]
+            columns_list = columns.select("th")
+            columns_data = [data.text for data in columns_list]
+            for tr in tr_list["rows"][i]:
+                td = tr.select("td")
+                rows = [data.text for data in td]
+                rows_data.append(rows)
+            # print(f'C_Data: {columns_data}\n\nR_Data: {rows_data}')
+            self.write_into_file(i, columns_data, rows_data)
+            rows_data = list()
 
     def write_into_file(self, index, columns, rows):
         df = pd.DataFrame(rows, columns=columns)
-        print(f"{df}")
-        print("---END---")
+        # print(f"{df}")
+        # print("---END---")
         try:
             os.makedirs(self.file_path, exist_ok=True)
         except Exception as e:
