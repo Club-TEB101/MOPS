@@ -73,12 +73,12 @@ class ProfitLossSheet(threading.Thread):
             os.makedirs(self.file_path, exist_ok=True)
         except Exception as e:
             print(f"[Error]Write Into File: {e}")
-            super().join(0)
+            self.join(0)
         finally:
             df.to_csv(f"{self.file_path}{index}.csv", index=False, encoding='utf-8-sig')
         pass
 
     def join(self, timeout=None):
-        print(f"{super().getName()} Interrupted.")
+        print(f"{super().getName()} Joined.")
         if super().is_alive():
             super().join(timeout)

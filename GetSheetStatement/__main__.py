@@ -1,7 +1,6 @@
 # packages
 import os
 import time
-import random
 import datetime
 
 # project class
@@ -62,10 +61,10 @@ def sheet_thread_set(file_path: str):
         thread.setName(f"Balance_Sheet_{(_year-1911)}_{ _season}")
     elif _sheet == SHEET_DIR[1]:
         thread = ProfitLossSheet("Profit_and_Loss_Account", (_year-1911), _season)
-        thread.setName(f"Profit_and_Loss_Account{(_year - 1911)}_{_season}")
+        thread.setName(f"Profit_and_Loss_Account_{(_year - 1911)}_{_season}")
     elif _sheet == SHEET_DIR[2]:
         thread = CashFlowThread("Cash_Flow_Statement", (_year-1911), _season)
-        thread.setName(f"Cash_Flow_Statement{(_year - 1911)}_{_season}")
+        thread.setName(f"Cash_Flow_Statement_{(_year - 1911)}_{_season}")
     else:
         thread = None
 
