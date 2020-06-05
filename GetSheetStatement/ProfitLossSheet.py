@@ -1,17 +1,15 @@
 import os
-import threading
-
-import pandas as pd
 import requests
+import threading
+import pandas as pd
 from bs4 import BeautifulSoup as bs4
 from requests.adapters import HTTPAdapter
-
-from MOPS import Constract
+from MOPS.GetSheetStatement import Constract
 
 
 class ProfitLossSheet(threading.Thread):
 
-    def __init__(self, sheet, year, season):
+    def __init__(self, sheet: str, year: int, season: int):
         super().__init__()
         self.sheet = Constract.FINANCIAL_STATMENT[sheet]
         self.url = Constract.MOPS_URL.format(sheet=self.sheet)
@@ -45,7 +43,7 @@ class ProfitLossSheet(threading.Thread):
             super().join(0)
         pass
 
-    def process_data(self, tables):
+    def process_data(self, tables: list):
         index = 1
         for table in tables:
             # print(table)
@@ -67,7 +65,7 @@ class ProfitLossSheet(threading.Thread):
             index += 1
         pass
 
-    def write_into_file(self, index, columns, rows):
+    def write_into_file(self, index: int, columns: list, rows: list):
         df = pd.DataFrame(rows, columns=columns)
         print(f"{df}")
         print("---END---")
@@ -79,3 +77,8 @@ class ProfitLossSheet(threading.Thread):
         finally:
             df.to_csv(f"{self.file_path}{index}.csv", index=False, encoding='utf-8-sig')
         pass
+
+    def join(self, timeout=None):
+        print(f"{super().getName()} Interrupted.")
+        if super().is_alive():
+            super().join(timeout)

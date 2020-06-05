@@ -1,17 +1,15 @@
 import os
-import threading
-
-import pandas as pd
 import requests
+import threading
+import pandas as pd
 from bs4 import BeautifulSoup as bs4
 from requests.adapters import HTTPAdapter
-
-from MOPS import Constract
+from MOPS.GetSheetStatement import Constract
 
 
 class BalanceSheet(threading.Thread):
 
-    def __init__(self, sheet, year, season):
+    def __init__(self, sheet: str, year: int, season: int):
         super().__init__()
         self.sheet = Constract.FINANCIAL_STATMENT[sheet]
         self.url = Constract.MOPS_URL.format(sheet=self.sheet)
@@ -46,7 +44,7 @@ class BalanceSheet(threading.Thread):
         pass
 
     # 因Soup處理有問題，所以改以人工獲取欄位及資料
-    def pre_process(self, soup):
+    def pre_process(self, soup: bs4):
         # 取得所有欄位資料
         all_tr_list = soup.select("tr")
 
@@ -82,7 +80,7 @@ class BalanceSheet(threading.Thread):
             temp_list.append(all_tr_list[i])
         return tr_list
 
-    def process_data(self, tables, tr_list):
+    def process_data(self, tables: list, tr_list: dict):
         rows_data = list()
         for i in range(len(tables)):
             columns = tr_list["columns"][i][0]
@@ -96,7 +94,7 @@ class BalanceSheet(threading.Thread):
             self.write_into_file(i, columns_data, rows_data)
             rows_data = list()
 
-    def write_into_file(self, index, columns, rows):
+    def write_into_file(self, index: int, columns: list, rows: list):
         df = pd.DataFrame(rows, columns=columns)
         # print(f"{df}")
         # print("---END---")
@@ -108,3 +106,8 @@ class BalanceSheet(threading.Thread):
         finally:
             df.to_csv(f"{self.file_path}{index}.csv", index=False, encoding='utf-8-sig')
         pass
+
+    def join(self, timeout=None):
+        print(f"{super().getName()} Interrupted.")
+        if super().is_alive():
+            super().join(timeout)
