@@ -1,9 +1,12 @@
+# libraries
 import os
 import requests
 import threading
 import pandas as pd
 from bs4 import BeautifulSoup as bs4
 from requests.adapters import HTTPAdapter
+
+# from Project
 from MOPS.GetSheetStatement import Constract
 
 
@@ -29,22 +32,23 @@ class BalanceSheet(threading.Thread):
         web_ss = requests.session()
         ss_adapter = HTTPAdapter(max_retries=3)
         web_ss.mount("https://", adapter=ss_adapter)
-
-        # start get html
-        res = web_ss.post(url=self.url, headers=self.header, data=self.payload, timeout=3)
-        # check iff: Response OK
-        if res.status_code == 200:
-            soup = bs4(res.text, "html.parser")
-            tr_list = self.pre_process(soup)
-            tables = soup.select("table[class='hasBorder']")
-            self.process_data(tables, tr_list)
-        else:
-            print(f"Get HTML FAIL: {res.status_code}, {res.reason}", end="\n\n")
+        try:
+            # start get html
+            res = web_ss.post(url=self.url, headers=self.header, data=self.payload, timeout=3)
+            # check iff: Response OK
+            if res.status_code == 200:
+                soup = bs4(res.text, "html.parser")
+                tr_list = self.pre_process(soup)
+                tables = soup.select("table[class='hasBorder']")
+                self.process_data(tables, tr_list)
+        except Exception as e:
+            print(f"Get HTML FAIL: {e}", end="\n\n")
             super().join(0)
         pass
 
     # 因Soup處理有問題，所以改以人工獲取欄位及資料
-    def pre_process(self, soup: bs4):
+    @staticmethod
+    def pre_process(soup: bs4):
         # 取得所有欄位資料
         all_tr_list = soup.select("tr")
 
@@ -69,6 +73,7 @@ class BalanceSheet(threading.Thread):
 
             # or 為加入最後取得之欄位清單
             if current_tr_class != last_tr_class or i == len(all_tr_list)-1:
+                # debug用，印出暫存列表資料
                 # print(f"current: {temp_list}\n --- END ---")
                 if last_tr_class[0] == "tblHead":
                     tr_list["columns"].append(temp_list)

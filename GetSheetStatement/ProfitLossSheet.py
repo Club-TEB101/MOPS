@@ -1,9 +1,12 @@
+# libraries
 import os
 import requests
 import threading
 import pandas as pd
 from bs4 import BeautifulSoup as bs4
 from requests.adapters import HTTPAdapter
+
+# from Project
 from MOPS.GetSheetStatement import Constract
 
 
@@ -67,8 +70,8 @@ class ProfitLossSheet(threading.Thread):
 
     def write_into_file(self, index: int, columns: list, rows: list):
         df = pd.DataFrame(rows, columns=columns)
-        print(f"{df}")
-        print("---END---")
+        # print(f"{df}")
+        # print("---END---")
         try:
             os.makedirs(self.file_path, exist_ok=True)
         except Exception as e:
