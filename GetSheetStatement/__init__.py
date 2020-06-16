@@ -1,0 +1,1 @@
+from .__main__ import check_data_latest
