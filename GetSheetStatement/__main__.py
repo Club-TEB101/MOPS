@@ -1,7 +1,8 @@
-# packages
+# libraries
 import os
 import time
 import datetime
+import random
 
 # project class
 from .ProfitLossSheet import ProfitLossSheet
@@ -13,14 +14,17 @@ _year = 2013  # IFRs後報表為102年後
 _season = 1
 now = datetime.datetime.now()
 SHEET_DIR = ["Balance", "ProfitLossSheet", "CashFlow"]
+start_time = time.time()
 
-
-# check data is all updating
 def check_data_latest():
+    """
+    Check data is all updating
+    :return: None
+    """
     file_path = f"./MOPS/"
     file_list = list()
     try:
-        # In each sheet, year, season, check files exist
+        # In each sheet, year, season, check files are existed or not
         for sheet in SHEET_DIR:
             for year in range(_year, now.year + 1):
                 for season in range(1, 5):
@@ -34,7 +38,7 @@ def check_data_latest():
     except Exception as e:
         print(f"Walking file in {file_path} Failed.\nMSG: {e}")
     finally:
-        # If not exist, set ETL thread
+        # If not exist, set Crawler thread
         if len(file_list) <= 0:
             print("All Data are latest")
         else:
@@ -45,13 +49,12 @@ def check_data_latest():
             start_jobs(sheet_threads)
 
 
-# Set Thread which lost in each season
-# param file_path: str
-#   The lost data in each season
-# return threads: list
-#   Get Data Thread List
 def sheet_thread_set(file_path: str):
-    threads = list()
+    """
+    Set Thread which lost in each season
+    :param file_path: str, The lost data in each season
+    :return: thread, Get Data Thread
+    """
     _sheet = file_path.split("/")[2]
     _year = int(file_path.split("/")[3])
     _season = int(file_path.split("/")[4])
@@ -74,17 +77,19 @@ def sheet_thread_set(file_path: str):
         if _season >= now_season:
             thread = None
 
+    # 因目前無 Proxy，所以逐一執行Thread
     if thread is not None:
         thread.start()
-        threads.append(thread)
+        time.sleep(random.randint(3, 7))
+    return thread
 
-    return threads
 
-
-# Start to run each thread
-# param sheet_thread_list: list
-#   The thread list for get each sheet data
 def start_jobs(sheet_thread_list: list):
+    """
+    Start to run each thread
+    :param sheet_thread_list: list(), The thread list for get each sheet data
+    :return: None
+    """
     for threads in sheet_thread_list:
         if len(threads) <= 0:
             continue
@@ -95,5 +100,5 @@ def start_jobs(sheet_thread_list: list):
         except Exception as e:
             print(f"Thread Starting Error: {e}")
 
-    print(f"--- Financial Get Complete. ---\nSleep 5sec...")
-    time.sleep(5)
+    print(f"--- Financial Get Complete. ---\n")
+    print(f"Total Spend Time: {time.time() - start_time}")
