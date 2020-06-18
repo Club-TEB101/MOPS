@@ -58,14 +58,13 @@ def sheet_thread_set(file_path: str):
     _year = int(file_path.split("/")[3])
     _season = int(file_path.split("/")[4])
 
-    # if _sheet == SHEET_DIR[0]:
-    #     thread = BalanceSheet("Balance_Sheet", (_year-1911), _season)
-    #     thread.setName(f"Balance_Sheet_{(_year-1911)}_{ _season}")
-    # elif _sheet == SHEET_DIR[1]:
-    #     thread = ProfitLossSheet("Profit_and_Loss_Account", (_year-1911), _season)
-    #     thread.setName(f"Profit_and_Loss_Account_{(_year - 1911)}_{_season}")
-    # el
-    if _sheet == SHEET_DIR[2]:
+    if _sheet == SHEET_DIR[0]:
+        thread = BalanceSheet("Balance_Sheet", (_year-1911), _season)
+        thread.setName(f"Balance_Sheet_{(_year-1911)}_{ _season}")
+    elif _sheet == SHEET_DIR[1]:
+        thread = ProfitLossSheet("Profit_and_Loss_Account", (_year-1911), _season)
+        thread.setName(f"Profit_and_Loss_Account_{(_year - 1911)}_{_season}")
+    elif _sheet == SHEET_DIR[2]:
         thread = CashFlowThread("Cash_Flow_Statement", (_year-1911), _season)
         thread.setName(f"Cash_Flow_Statement_{(_year - 1911)}_{_season}")
     else:
@@ -77,6 +76,7 @@ def sheet_thread_set(file_path: str):
             thread = None
 
     # 因目前無 Proxy，所以逐一執行Thread
+    # TODO 應改成對應股票代碼取得各季財報...
     if thread is not None:
         thread.start()
         time.sleep(random.randint(3, 7))

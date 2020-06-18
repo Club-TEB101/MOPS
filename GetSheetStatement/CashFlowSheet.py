@@ -6,6 +6,7 @@ import pandas
 import requests
 import threading
 from os import path, walk
+from datetime import datetime
 from bs4 import BeautifulSoup as bs4
 from requests.adapters import HTTPAdapter
 
@@ -79,13 +80,13 @@ class CashFlowThread(threading.Thread):
                     tables = self.preprocess()
                 else:
                     tables = soup.select("table")
-                if len(tables) > 0:
+                if len(tables) >= 2:
                     self.process_data(tables[1])
             else:
                 print(f"Get HTML FAIL: {res.status_code}, {res.reason}", end="\n\n")
                 super().join(0)
         except ConnectionAbortedError as e:
-            print(f"Connection Abort: Sleep 5sec...\nMSG: {e}")
+            print(f"[CashFlowSheet][etl][{datetime.now()}] Connection Abort: {e}")
             self.etl(code, retry=retry+1) if retry >= 5 else self.join(0)
         pass
 
@@ -100,38 +101,44 @@ class CashFlowThread(threading.Thread):
             soup = bs4(res.text, "html.parser")
             tables = soup.select("table")
         except Exception as e:
-            print(f"Catch an Exception: {e}")
+            print(f"[CashFlowSheet][preprocess][{datetime.now()}] Catch an Exception: {e}")
         finally:
             return tables
 
     def process_data(self, table):
         tr_list = table.select("tr")
         column_list = ["Columns", "Data"]
+        row1_list = list()
         row_list = list()
 
         for tr in tr_list:
             td_list = tr.select("td")
-            temp_list = ["", 0]
-            for td in td_list:
-                if len(td_list) > 0 and td != td_list[2]:
-                    temp_list.append(td)
-                row_list.append(temp_list)
-                temp_list = list()
+            # print(f"{[td.text for td in td_list]}")
+            if len(td_list) > 0:
+                row_list.append(td_list[0].text)
+                if len(td_list) > 2:
+                    row1_list.append(td_list[1].text)
+                else:
+                    row1_list.append("-")
+            pass
 
         if len(row_list) > 0:
-            self.write_into_file(column_list, row_list)
+            self.write_into_file(column_list, row_list, row1_list)
         pass
 
-    def write_into_file(self, columns: list, rows: list):
-        df = pandas.DataFrame(rows, columns=columns)
-        print(f"{df}")
+    def write_into_file(self, columns: list, rows: list, rows1: list):
+        df = pandas.DataFrame(columns=columns)
+        print(f"R: {len(rows)},R1: {len(rows1)}")
+        df["Columns"] = rows
+        df["Data"] = rows1
+        # print(f"{df}")
 
         try:
             os.makedirs(self.file_path, exist_ok=True)
         except Exception as e:
-            print(f"[Error]Write Into File: {e}")
+            print(f"[CashFlowSheet][write_into_file][{datetime.now()}] Write Into File: {e}")
             self.join(0)
         finally:
             df.to_csv(f"{self.file_path}{self.payload['co_id']}.csv", index=False, encoding='utf-8-sig')
-        pass
+            print(f"Write into {self.file_path}{self.payload['co_id']}.csv\n\n")
         pass
